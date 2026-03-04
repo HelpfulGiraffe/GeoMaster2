@@ -738,7 +738,7 @@ function FlagCard({ country, state, disabled, onClick }) {
     <button className={`gm-flag-card${state ? ` ${state}` : ""}`} disabled={disabled} onClick={onClick}>
       {imgFailed
         ? <span className="gm-flag-emoji">{codeToEmoji(country.code)}</span>
-        : <img src={`https://flagsapi.com/${country.code.toUpperCase()}/flat/128.png`} alt={country.name} onError={() => setImgFailed(true)} />
+        : <img src={`/flags/${country.code.toUpperCase()}.png`} alt={country.name} onError={() => setImgFailed(true)} />
       }
     </button>
   );
@@ -902,7 +902,7 @@ function FlagGame({ onSubmitScore, onHome }) {
           <div className="gm-missed-list">
             {missed.map((c, i) => (
               <div className="gm-missed-item" key={i}>
-                <img src={`https://flagsapi.com/${c.code.toUpperCase()}/flat/32.png`} alt={c.name} style={{width:40,height:28,objectFit:"contain",borderRadius:4}} onError={e=>e.target.style.display='none'} />
+                <img src={`/flags/${c.code.toUpperCase()}.png`} alt={c.name} style={{width:40,height:28,objectFit:"contain",borderRadius:4}} onError={e=>e.target.style.display='none'} />
                 <span style={{flex:1,fontWeight:700}}>{c.name}</span>
                 <span className="gm-missed-region">{c.region}</span>
               </div>
