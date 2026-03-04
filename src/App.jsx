@@ -591,14 +591,14 @@ const styles = `
     align-items: center;
     justify-content: center;
     width: 100%;
-    aspect-ratio: 5/3;
+    aspect-ratio: 3/2;
     padding: 0;
     cursor: pointer;
     transition: border-color 0.15s, transform 0.15s, background 0.15s;
     overflow: hidden;
     position: relative;
   }
-  .gm-flag-card img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 6px; }
+  .gm-flag-card img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; }
   .gm-flag-emoji { font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1; }
   .gm-flag-card:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); background: rgba(0,212,255,0.05); }
   .gm-flag-card:disabled { cursor: default; }
