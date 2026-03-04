@@ -582,7 +582,7 @@ const styles = `
   }
   .gm-region-tag { text-align: center; color: var(--muted); font-size: 0.65rem; margin-bottom: 18px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 
-  .gm-flags-row { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; width: 100%; }
+  .gm-flags-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; width: 100%; }
   .gm-flag-card {
     background: var(--card);
     border: 2px solid var(--border);
@@ -591,15 +591,15 @@ const styles = `
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 110px;
+    aspect-ratio: 5/3;
     padding: 0;
     cursor: pointer;
     transition: border-color 0.15s, transform 0.15s, background 0.15s;
     overflow: hidden;
     position: relative;
   }
-  .gm-flag-card img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 8px; }
-  .gm-flag-emoji { font-size: 3.5rem; line-height: 1; }
+  .gm-flag-card img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 6px; }
+  .gm-flag-emoji { font-size: clamp(1.8rem, 6vw, 2.8rem); line-height: 1; }
   .gm-flag-card:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); background: rgba(0,212,255,0.05); }
   .gm-flag-card:disabled { cursor: default; }
   .gm-flag-card.correct { border-color: var(--green); background: rgba(0,229,160,0.1); animation: flagPop 0.35s ease; }
