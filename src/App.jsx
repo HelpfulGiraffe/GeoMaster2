@@ -467,7 +467,7 @@ const styles = `
   .gm-bnav-btn.active .gm-bnav-icon { transform: translateY(-2px); }
 
   /* ── PAGE & SCREEN ── */
-  .gm-page { display: none; width: 100%; max-width: 620px; margin: 0 auto; padding: 24px 16px 24px; flex-direction: column; align-items: center; }
+  .gm-page { display: none; width: 100%; max-width: 620px; margin: 0 auto; padding: 16px 8px 24px; flex-direction: column; align-items: center; }
   .gm-page.active { display: flex; }
   .gm-screen { display: none; flex-direction: column; align-items: center; text-align: center; width: 100%; }
   .gm-screen.active { display: flex; }
@@ -562,7 +562,7 @@ const styles = `
   .gm-game-card {
     background: var(--surface);
     border-radius: 20px;
-    padding: 24px 20px;
+    padding: 16px 12px;
     width: 100%;
     border: 1px solid var(--border);
   }
@@ -591,6 +591,7 @@ const styles = `
     align-items: center;
     justify-content: center;
     width: 100%;
+    min-height: 100px;
     aspect-ratio: 4/3;
     padding: 0;
     cursor: pointer;
@@ -598,8 +599,12 @@ const styles = `
     overflow: hidden;
     position: relative;
   }
-  .gm-flag-card img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 4px; }
+  .gm-flag-card img { position: absolute; width: 160%; height: 160%; object-fit: cover; display: block; }
   .gm-flag-emoji { font-size: clamp(2.5rem, 8vw, 4rem); line-height: 1; }
+  @media (max-width: 480px) {
+    .gm-flag-card { min-height: 80px; }
+    .gm-flags-row { gap: 6px; }
+  }
   .gm-flag-card:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); background: rgba(0,212,255,0.05); }
   .gm-flag-card:disabled { cursor: default; }
   .gm-flag-card.correct { border-color: var(--green); background: rgba(0,229,160,0.1); animation: flagPop 0.35s ease; }
