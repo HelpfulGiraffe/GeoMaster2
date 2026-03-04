@@ -1007,7 +1007,7 @@ function CityGame({ onSubmitScore }) {
     setPendingPin(null);
     setResultText({ text: "", type: "waiting" });
     setNextVisible(false);
-    document.getElementById("gm-confirm-bar")?.classList.remove("visible");
+    
     document.getElementById("gm-next-btn")?.classList.remove("visible");
     const q = questions[current];
     if (q) {
@@ -1075,7 +1075,7 @@ function CityGame({ onSubmitScore }) {
       .style("pointer-events","none");
     mapRef.current.pendingPin = { lon, lat };
     setPendingPin({ lon, lat });
-    document.getElementById("gm-confirm-bar")?.classList.add("visible");
+    
   }
 
   function cancelPin() {
@@ -1083,7 +1083,7 @@ function CityGame({ onSubmitScore }) {
     g.select("#gm-pin-prov").remove();
     mapRef.current.pendingPin = null;
     setPendingPin(null);
-    document.getElementById("gm-confirm-bar")?.classList.remove("visible");
+    
   }
 
   function confirmPin() {
@@ -1130,7 +1130,7 @@ function CityGame({ onSubmitScore }) {
     else if(dist<1000){txt=`👍 Not bad! ${dist} km — +${pts}`;type="correct";}
     else{txt=`❌ ${dist} km off — +${pts}`;type="wrong";}
     setResultText({text:txt,type});
-    document.getElementById("gm-confirm-bar")?.classList.remove("visible");
+    
     setNextVisible(true);
   }
 
@@ -1217,12 +1217,15 @@ function CityGame({ onSubmitScore }) {
       </div>
       <div className="gm-city-card">
         <div className="gm-city-question-bar">
-          <div>
-            <div className="gm-city-name" id="gm-city-name-disp">{q?.name}</div>
-            <div className="gm-city-country">{q?.country}</div>
-          </div>
-          <div style={{fontSize:"0.72rem",color:"var(--muted)",textAlign:"right",maxWidth:140,lineHeight:1.5}}>
-            {confirmed ? "🟢 correct  🔴 guess" : "Tap map to drop your pin"}
+          <div className="gm-city-name" id="gm-city-name-disp">{q?.name}</div>
+          <div id="gm-confirm-bar-inline">
+            {pendingPin && !confirmed && (
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <button className="gm-cbtn cancel" onClick={cancelPin}>✕</button>
+                <button className="gm-cbtn go" onClick={confirmPin}>✓ Confirm</button>
+              </div>
+            )}
+            {confirmed && <span style={{fontSize:"0.72rem",color:"var(--muted)"}}>🟢 correct  🔴 guess</span>}
           </div>
         </div>
         <div id="gm-map-wrap" ref={wrapRef} style={{position:"relative"}}>
@@ -1237,13 +1240,8 @@ function CityGame({ onSubmitScore }) {
             <button className="gm-zoom-btn" onClick={resetZoom} title="Reset">⌂</button>
           </div>
         </div>
-        <div className="gm-confirm-bar" id="gm-confirm-bar">
-          <span className="gm-confirm-label">Happy with your pin? <strong>Confirm</strong> to lock it in.</span>
-          <button className="gm-cbtn cancel" onClick={cancelPin}>✕</button>
-          <button className="gm-cbtn go" onClick={confirmPin}>✓ Confirm</button>
-        </div>
         <div className="gm-city-result-bar">
-          <div className={`gm-city-result-text ${resultText.type}`}>{resultText.text || (confirmed ? "" : "Drop your pin on the map")}</div>
+          <div className={`gm-city-result-text ${resultText.type}`}>{resultText.text}</div>
           <button className={`gm-next-btn${nextVisible?" visible":""}`} id="gm-next-btn" onClick={nextQuestion}>Next →</button>
         </div>
       </div>
