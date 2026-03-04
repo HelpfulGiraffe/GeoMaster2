@@ -363,11 +363,18 @@ const styles = `
     --red: #ff4757;
     --gold: #ffd700;
   }
-  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; width: 100%; overflow-x: hidden; }
 
   /* ── LAYOUT ── */
+  html, body, #root {
+    width: 100%;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
   .gm-root {
     min-height: 100vh;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -425,9 +432,15 @@ const styles = `
     background: rgba(10,14,26,0.98);
     border-top: 1px solid var(--border);
     display: flex;
+    justify-content: center;
     z-index: 1000;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     backdrop-filter: blur(16px);
+  }
+  .gm-bnav-inner {
+    display: flex;
+    width: 100%;
+    max-width: 620px;
   }
   .gm-bnav-btn {
     flex: 1;
@@ -454,7 +467,7 @@ const styles = `
   .gm-bnav-btn.active .gm-bnav-icon { transform: translateY(-2px); }
 
   /* ── PAGE & SCREEN ── */
-  .gm-page { display: none; width: 100%; max-width: 620px; padding: 24px 16px 24px; flex-direction: column; align-items: center; }
+  .gm-page { display: none; width: 100%; max-width: 620px; margin: 0 auto; padding: 24px 16px 24px; flex-direction: column; align-items: center; }
   .gm-page.active { display: flex; }
   .gm-screen { display: none; flex-direction: column; align-items: center; text-align: center; width: 100%; }
   .gm-screen.active { display: flex; }
@@ -1356,6 +1369,7 @@ export default function App() {
       </div>
 
       <nav className="gm-bnav">
+        <div className="gm-bnav-inner">
         {[
           ["flags","🏴‍☠️","Flags"],
           ["cities","📍","Cities"],
@@ -1370,6 +1384,7 @@ export default function App() {
             {label}
           </button>
         ))}
+        </div>
       </nav>
     </div>
   );
