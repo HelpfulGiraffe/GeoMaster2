@@ -463,8 +463,8 @@ const styles = `
     -webkit-tap-highlight-color: transparent;
   }
   .gm-bnav-icon { font-size: 1.4rem; line-height: 1; transition: transform 0.2s; }
-  .gm-bnav-btn.active { color: var(--accent); }
-  .gm-bnav-btn.active .gm-bnav-icon { transform: translateY(-2px); }
+  .gm-bnav-btn.active { color: var(--text); }
+  .gm-bnav-btn.active .gm-bnav-icon { transform: none; }
 
   /* ── PAGE & SCREEN ── */
   .gm-page { display: none; width: 100%; max-width: 620px; margin: 0 auto; padding: 16px 8px 24px; flex-direction: column; align-items: center; }
@@ -600,12 +600,7 @@ const styles = `
   }
   .gm-flag-card img { position: absolute; width: 100%; height: 100%; object-fit: cover; display: block; }
   .gm-flag-emoji { font-size: 3.5rem; line-height: 1; }
-  .gm-flag-card:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); background: rgba(0,212,255,0.05); }
-  .gm-flag-card:disabled { cursor: default; }
-  .gm-flag-card.correct { border-color: var(--green); background: rgba(0,229,160,0.1); animation: flagPop 0.35s ease; }
-  .gm-flag-card.wrong { border-color: var(--red); background: rgba(255,71,87,0.1); animation: flagShake 0.35s ease; }
-  @keyframes flagPop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
-  @keyframes flagShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .gm-flag-card:hover:not(:disabled) { border-color: var(--accent); }
 
   .gm-result-msg { text-align: center; margin-top: 12px; font-size: 0.9rem; font-weight: 700; min-height: 22px; }
   .gm-result-msg.correct { color: var(--green); }
@@ -732,10 +727,23 @@ document.head.appendChild(styleEl);
 const QUESTION_TIME = 15; // seconds per flag question
 
 /* ── Single flag card — tracks img error in state so only one flag ever shows ── */
+/* Preload all flag images into browser cache on startup */
+const allCodes = countries.map(c => c.code);
+allCodes.forEach(code => { const img = new Image(); img.src = `/flags/${code.toUpperCase()}.png`; });
+
 function FlagCard({ country, state, disabled, onClick }) {
   const [imgFailed, setImgFailed] = useState(false);
+
+  const borderColor = state === "correct" ? "var(--green)" : state === "wrong" ? "var(--red)" : "var(--border)";
+  const bg = state === "correct" ? "rgba(0,229,160,0.15)" : state === "wrong" ? "rgba(255,71,87,0.15)" : "var(--card)";
+
   return (
-    <button className={`gm-flag-card${state ? ` ${state}` : ""}`} disabled={disabled} onClick={onClick}>
+    <button
+      className="gm-flag-card"
+      disabled={disabled}
+      onClick={onClick}
+      style={{ borderColor, background: bg, transition: "border-color 0.1s, background 0.1s" }}
+    >
       {imgFailed
         ? <span className="gm-flag-emoji">{codeToEmoji(country.code)}</span>
         : <img src={`/flags/${country.code.toUpperCase()}.png`} alt={country.name} onError={() => setImgFailed(true)} />
@@ -840,19 +848,26 @@ function FlagGame({ onSubmitScore, onHome }) {
     setScore(newScore); setLives(newLives); setStreak(newStreak);
     setMaxStreak(newMaxStreak); setMissed(newMissed);
 
+    // Preload next question's flags immediately so they're ready
+    const nextIdx = current + 1;
+    if (nextIdx < questions.length) {
+      questions[nextIdx].options.forEach(c => {
+        const img = new Image();
+        img.src = `/flags/${c.code.toUpperCase()}.png`;
+      });
+    }
+
     setTimeout(() => {
-      const nextIdx = current + 1;
+      setResultMsg({ text: "", type: "" });
       if (newLives <= 0 || nextIdx >= questions.length) {
         setScreen("end");
-        const pct = Math.round((newScore / ((questions.length * (100 + 100))) * 100));
         onSubmitScore && onSubmitScore("flag", newScore, `${questions.length} questions`);
       } else {
+        setCardStates([null, null, null]);
         setCurrent(nextIdx);
         setAnswered(false);
-        setResultMsg({ text: "", type: "" });
-        setCardStates([null, null, null]);
       }
-    }, 1600);
+    }, 1400);
   }, [answered, questions, current, score, lives, streak, maxStreak, missed]);
 
   const q = questions[current];
@@ -1252,24 +1267,51 @@ function CityGame({ onSubmitScore }) {
 /* ════════════════════════════════════════
    LEADERBOARD SUBMIT COMPONENT
 ════════════════════════════════════════ */
+const SUPABASE_URL = "https://qacqgrcbzlbamypkivve.supabase.co";
+const SUPABASE_KEY = "sb_publishable_HyaNsL_TS0pXo9enGSm3Dw_YsXlrRpS";
+
+async function sbInsert(row) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/scores`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Prefer": "return=minimal"
+    },
+    body: JSON.stringify(row)
+  });
+  if (!res.ok) throw new Error(await res.text());
+}
+
+async function sbSelect(game) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?game=eq.${game}&order=score.desc&limit=10`, {
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
 function LbSubmit({ game, score, detail }) {
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim()) { setError(true); return; }
+    setSaving(true);
     try {
-      const key = `lb_${game}`;
-      const existing = JSON.parse(localStorage.getItem(key) || "[]");
-      existing.push({ name: name.trim(), score, detail, date: Date.now() });
-      existing.sort((a, b) => b.score - a.score);
-      localStorage.setItem(key, JSON.stringify(existing.slice(0, 50)));
+      await sbInsert({ game, name: name.trim(), score, detail, date: Date.now() });
       setSubmitted(true);
-    } catch { alert("Could not submit score."); }
+    } catch { alert("Could not submit score — check your connection."); }
+    setSaving(false);
   };
 
-  if (submitted) return <div className="gm-lb-submit" style={{textAlign:"center",color:"var(--green)",fontWeight:700,fontSize:"0.9rem"}}>🎉 Score submitted!</div>;
+  if (submitted) return <div className="gm-lb-submit" style={{textAlign:"center",color:"var(--green)",fontWeight:700,fontSize:"0.9rem"}}>\U0001f389 Score submitted!</div>;
 
   return (
     <div className="gm-lb-submit">
@@ -1282,7 +1324,9 @@ function LbSubmit({ game, score, detail }) {
         value={name}
         onChange={e => { setName(e.target.value); setError(false); }}
       />
-      <button className="gm-btn" style={{width:"100%",margin:0}} onClick={submit}>Submit Score</button>
+      <button className="gm-btn" style={{width:"100%",margin:0}} onClick={submit} disabled={saving}>
+        {saving ? "Saving..." : "Submit Score"}
+      </button>
     </div>
   );
 }
@@ -1295,17 +1339,17 @@ function Leaderboard() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const loadLb = (t) => {
+  const loadLb = async (t) => {
     setLoading(true);
     try {
-      const data = JSON.parse(localStorage.getItem(`lb_${t}`) || "[]");
-      setEntries(data.slice(0, 10));
+      const data = await sbSelect(t);
+      setEntries(data);
     } catch { setEntries([]); }
     setLoading(false);
   };
 
   useEffect(() => { loadLb(tab); }, [tab]);
-  useEffect(() => { loadLb(tab); }, []); // reload fresh on every mount
+  useEffect(() => { loadLb(tab); }, []);
 
   const medalClass = i => i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
   const medalLabel = i => ["🥇","🥈","🥉"][i] || (i + 1);
